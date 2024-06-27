@@ -1,0 +1,102 @@
+Index: 3.9venv/Lib/site-packages/shap/plots/_force_matplotlib.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/3.9venv/Lib/site-packages/shap/plots/_force_matplotlib.py b/3.9venv/Lib/site-packages/shap/plots/_force_matplotlib.py
+--- a/3.9venv/Lib/site-packages/shap/plots/_force_matplotlib.py	
++++ b/3.9venv/Lib/site-packages/shap/plots/_force_matplotlib.py	(date 1636898924666)
+@@ -80,7 +80,8 @@
+ def draw_labels(fig, ax, out_value, features, feature_type, offset_text, total_effect=0, min_perc=0.05, text_rotation=0):
+     start_text = out_value
+     pre_val = out_value
+-    
++    f_count = 0
++
+     # Define variables specific to positive and negative effect features
+     if feature_type == 'positive':
+         colors = ['#FF0D57', '#FFC3D5']
+@@ -104,9 +105,14 @@
+     for feature in features:
+         # Exclude all labels that do not contribute at least 10% to the total
+         feature_contribution = np.abs(float(feature[0]) - pre_val) / np.abs(total_effect)
+-        if feature_contribution < min_perc:
++        if feature_contribution < min_perc - 0.015:
+             break
+-        
++
++        f_count += 1  # NEWCODE: alternate y position of x axis label text
++        y_pos = {0: -0.1,
++                 1: -0.2,
++                 2: -0.3}
++
+         # Compute value for current feature
+         val = float(feature[0])
+         
+@@ -114,16 +120,17 @@
+         if feature[1] == "":
+             text = feature[2]
+         else:
+-            text = feature[2] + ' = ' + feature[1]
++            text = feature[2] + ' = ' + feature[1]  # NEWCODE: removed values
+ 
+         if text_rotation is not 0:
+             va_alignment = 'top'
+         else:
+             va_alignment = 'baseline'
+-
+-        text_out_val = plt.text(start_text - sign * offset_text,
+-                                -0.15, text,
+-                                fontsize=12, color=colors[0],
++        print(f'x: {start_text- sign * offset_text}')
++        text_out_val = plt.text(x=start_text- sign * offset_text,
++                                y=-0.17 - 0.027 * (f_count - 1) if f_count > 1 else -0.17,  # -0.15  y_pos[f_count % 3]
++                                s=text.replace('_', ''),
++                                fontsize=14, color=colors[0],
+                                 horizontalalignment=alignement,
+                                 va=va_alignment,
+                                 rotation=text_rotation)
+@@ -146,7 +153,7 @@
+             break
+         
+         # Create end line
+-        if (sign * box_end_) > (sign * val):
++        if (sign * box_end_) > 50 * (sign * val):  # NEWCODE: disable
+             x, y = np.array([[val, val], [0, -0.18]])
+             line = lines.Line2D(x, y, lw=1., alpha=0.5, color=colors[0])
+             line.set_clip_on(False)
+@@ -363,13 +370,13 @@
+     width_separators = (ax.get_xlim()[1] - ax.get_xlim()[0]) / 200
+     
+     # Create bar for negative shap values
+-    rectangle_list, separator_list = draw_bars(out_value, neg_features, 'negative',
+-                                               width_separators, width_bar)
+-    for i in rectangle_list:
+-        ax.add_patch(i)
+-    
+-    for i in separator_list:
+-        ax.add_patch(i)
++    # rectangle_list, separator_list = draw_bars(out_value, neg_features, 'negative',
++    #                                            width_separators, width_bar)
++    # for i in rectangle_list:
++    #     ax.add_patch(i)
++    #
++    # for i in separator_list:
++    #     ax.add_patch(i)
+     
+     # Create bar for positive shap values
+     rectangle_list, separator_list = draw_bars(out_value, pos_features, 'positive',
+@@ -383,10 +390,10 @@
+     # Add labels
+     total_effect = np.abs(total_neg) + total_pos
+     fig, ax = draw_labels(fig, ax, out_value, neg_features, 'negative',
+-                          offset_text, total_effect, min_perc=min_perc, text_rotation=text_rotation)
++                          offset_text, total_effect, min_perc=0.05, text_rotation=text_rotation)
+     
+-    fig, ax = draw_labels(fig, ax, out_value, pos_features, 'positive',
+-                          offset_text, total_effect, min_perc=min_perc, text_rotation=text_rotation)
++    # fig, ax = draw_labels(fig, ax, out_value, pos_features, 'positive',
++    #                       offset_text, total_effect, min_perc=min_perc, text_rotation=text_rotation)
+     
+     # higher lower legend
+     draw_higher_lower_element(out_value, offset_text)
